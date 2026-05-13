@@ -6,650 +6,539 @@
   <title>🎬 YouTube Paralelo</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg-primary: #0f0f0f;
-      --bg-secondary: #1a1a1a;
-      --bg-card: #222222;
-      --bg-hover: #2a2a2a;
-      --bg-input: #121212;
-      --text-primary: #f1f1f1;
-      --text-secondary: #aaaaaa;
-      --accent: #ff4444;
-      --accent-dim: rgba(255,68,68,0.15);
-      --border: #333333;
-      --shadow: rgba(0,0,0,0.4);
-      --radius: 12px;
-      --transition: 0.25s ease;
+      --bg: #0f0f0f; --bg2: #1a1a1a; --card: #222; --hover: #2a2a2a;
+      --input: #121212; --text: #f1f1f1; --dim: #aaa; --accent: #ff4444;
+      --border: #333; --shadow: rgba(0,0,0,.4); --r: 12px; --t: .25s ease;
     }
+    body { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,Roboto,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    a { color:inherit; text-decoration:none; }
+    ::-webkit-scrollbar { width:8px; }
+    ::-webkit-scrollbar-track { background:var(--bg); }
+    ::-webkit-scrollbar-thumb { background:#444; border-radius:4px; }
 
-    body {
-      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      min-height: 100vh;
-    }
+    /* HEADER */
+    header { position:sticky; top:0; z-index:100; background:rgba(26,26,26,.95); border-bottom:1px solid var(--border); padding:12px 24px; display:flex; align-items:center; gap:20px; backdrop-filter:blur(16px); }
+    .logo { display:flex; align-items:center; gap:10px; cursor:pointer; flex-shrink:0; }
+    .logo-icon { width:40px; height:40px; background:linear-gradient(135deg,var(--accent),#c00); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; box-shadow:0 2px 12px rgba(255,68,68,.3); }
+    .logo-text { font-size:20px; font-weight:700; }
+    .logo-text span { color:var(--accent); }
 
-    a { color: inherit; text-decoration: none; }
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: var(--bg-primary); }
-    ::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+    /* SEARCH */
+    .search-box { flex:1; max-width:640px; margin:0 auto; position:relative; }
+    .search-row { display:flex; }
+    .search-input { flex:1; padding:10px 18px; font-size:15px; background:var(--input); color:var(--text); border:1px solid var(--border); border-right:none; border-radius:var(--r) 0 0 var(--r); outline:none; }
+    .search-input:focus { border-color:#555; }
+    .search-input::placeholder { color:#666; }
+    .search-btn { padding:10px 24px; background:var(--card); border:1px solid var(--border); border-radius:0 var(--r) var(--r) 0; color:var(--text); font-size:18px; cursor:pointer; }
+    .search-btn:hover { background:var(--hover); }
 
-    /* === HEADER === */
-    header {
-      position: sticky; top: 0; z-index: 100;
-      background: rgba(26,26,26,0.95);
-      border-bottom: 1px solid var(--border);
-      padding: 12px 24px;
-      display: flex; align-items: center; gap: 20px;
-      backdrop-filter: blur(16px);
-    }
+    .sugg { position:absolute; top:100%; left:0; right:0; background:var(--bg2); border:1px solid var(--border); border-radius:0 0 var(--r) var(--r); display:none; z-index:200; max-height:300px; overflow-y:auto; }
+    .sugg.on { display:block; }
+    .sugg-item { padding:10px 18px; cursor:pointer; font-size:14px; }
+    .sugg-item:hover { background:var(--hover); }
 
-    .logo { display: flex; align-items: center; gap: 10px; cursor: pointer; flex-shrink: 0; }
-    .logo-icon {
-      width: 40px; height: 40px;
-      background: linear-gradient(135deg, var(--accent), #cc0000);
-      border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px;
-      box-shadow: 0 2px 12px rgba(255,68,68,0.3);
-    }
-    .logo-text { font-size: 20px; font-weight: 700; }
-    .logo-text span { color: var(--accent); }
+    /* PILLS */
+    .pills { display:flex; gap:10px; padding:14px 24px; overflow-x:auto; background:var(--bg); border-bottom:1px solid var(--border); }
+    .pills::-webkit-scrollbar { display:none; }
+    .pill { flex-shrink:0; padding:8px 16px; background:var(--card); border:none; border-radius:8px; color:var(--text); font-size:13px; font-weight:500; cursor:pointer; }
+    .pill:hover,.pill.on { background:var(--text); color:var(--bg); }
 
-    /* === SEARCH === */
-    .search-container { flex: 1; max-width: 640px; margin: 0 auto; position: relative; }
-    .search-row { display: flex; }
-    .search-input {
-      flex: 1; padding: 10px 18px; font-size: 15px;
-      background: var(--bg-input); color: var(--text-primary);
-      border: 1px solid var(--border); border-right: none;
-      border-radius: var(--radius) 0 0 var(--radius); outline: none;
-    }
-    .search-input:focus { border-color: #555; }
-    .search-input::placeholder { color: #666; }
-    .search-btn {
-      padding: 10px 24px; background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 0 var(--radius) var(--radius) 0;
-      color: var(--text-primary); font-size: 18px; cursor: pointer;
-    }
-    .search-btn:hover { background: var(--bg-hover); }
+    /* MAIN */
+    main { max-width:1400px; margin:0 auto; padding:24px; padding-bottom:60px; }
 
-    /* === SUGGESTIONS === */
-    .suggestions {
-      position: absolute; top: 100%; left: 0; right: 0;
-      background: var(--bg-secondary); border: 1px solid var(--border);
-      border-radius: 0 0 var(--radius) var(--radius);
-      display: none; z-index: 200; max-height: 300px; overflow-y: auto;
-    }
-    .suggestions.active { display: block; }
-    .suggestion-item {
-      padding: 10px 18px; cursor: pointer; font-size: 14px;
-      display: flex; align-items: center; gap: 10px;
-    }
-    .suggestion-item:hover { background: var(--bg-hover); }
+    /* PLAYER */
+    .player { display:none; }
+    .player.on { display:grid; grid-template-columns:1fr 380px; gap:24px; margin-bottom:32px; }
+    .pl-main { min-width:0; }
+    .pl-wrap { width:100%; aspect-ratio:16/9; background:#000; border-radius:var(--r); overflow:hidden; box-shadow:0 8px 32px var(--shadow); position:relative; }
+    .pl-wrap iframe { position:absolute; top:0; left:0; width:100%; height:100%; border:none; }
+    .pl-info { margin-top:16px; }
+    .pl-title { font-size:20px; font-weight:700; line-height:1.3; margin-bottom:10px; }
+    .pl-meta { display:flex; align-items:center; gap:16px; color:var(--dim); font-size:13px; flex-wrap:wrap; margin-bottom:12px; }
+    .pl-meta .ch { color:var(--text); font-weight:600; font-size:15px; }
+    .pl-actions { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+    .act-btn { padding:8px 16px; background:var(--card); border:1px solid var(--border); border-radius:20px; color:var(--text); font-size:13px; cursor:pointer; }
+    .act-btn:hover { background:var(--hover); }
+    .pl-desc { padding:16px; background:var(--card); border-radius:var(--r); font-size:14px; line-height:1.6; color:var(--dim); white-space:pre-wrap; max-height:180px; overflow-y:auto; cursor:pointer; }
+    .pl-desc.exp { max-height:none; }
+    .back-btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; margin-bottom:16px; background:var(--card); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:14px; cursor:pointer; }
+    .back-btn:hover { background:var(--hover); }
 
-    /* === NAV PILLS === */
-    .nav-pills {
-      display: flex; gap: 10px; padding: 14px 24px;
-      overflow-x: auto; background: var(--bg-primary);
-      border-bottom: 1px solid var(--border);
-    }
-    .nav-pills::-webkit-scrollbar { display: none; }
-    .pill {
-      flex-shrink: 0; padding: 8px 16px; background: var(--bg-card);
-      border: none; border-radius: 8px; color: var(--text-primary);
-      font-size: 13px; font-weight: 500; cursor: pointer;
-    }
-    .pill:hover, .pill.active { background: var(--text-primary); color: var(--bg-primary); }
+    /* SIDEBAR */
+    .pl-side { max-height:calc(100vh - 100px); overflow-y:auto; }
+    .side-title { font-size:16px; font-weight:700; margin-bottom:16px; }
+    .side-vid { display:flex; gap:10px; padding:8px; border-radius:8px; cursor:pointer; margin-bottom:8px; }
+    .side-vid:hover { background:var(--hover); }
+    .side-thumb { flex-shrink:0; width:168px; aspect-ratio:16/9; border-radius:8px; overflow:hidden; background:#111; }
+    .side-thumb img { width:100%; height:100%; object-fit:cover; }
+    .side-info { flex:1; min-width:0; }
+    .side-info .t { font-size:13px; font-weight:600; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; margin-bottom:4px; }
+    .side-info .m { font-size:12px; color:var(--dim); }
 
-    /* === MAIN === */
-    main { max-width: 1400px; margin: 0 auto; padding: 24px; padding-bottom: 60px; }
+    /* GRID */
+    .sec-title { font-size:22px; font-weight:700; margin-bottom:20px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:20px; }
+    .vcard { background:var(--bg2); border-radius:var(--r); overflow:hidden; cursor:pointer; border:1px solid transparent; transition:all var(--t); }
+    .vcard:hover { transform:translateY(-4px); border-color:var(--border); box-shadow:0 8px 24px var(--shadow); }
+    .tc { position:relative; aspect-ratio:16/9; overflow:hidden; background:#111; }
+    .tc img { width:100%; height:100%; object-fit:cover; transition:transform .3s; }
+    .vcard:hover .tc img { transform:scale(1.05); }
+    .dur { position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,.85); color:#fff; font-size:12px; font-weight:600; padding:2px 6px; border-radius:4px; }
+    .ci { padding:12px; }
+    .ci .ct { font-size:14px; font-weight:600; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; margin-bottom:6px; }
+    .ci .cc { font-size:13px; color:var(--dim); margin-bottom:4px; }
+    .ci .cs { font-size:12px; color:var(--dim); display:flex; gap:8px; }
 
-    /* === PLAYER === */
-    .player-section { display: none; }
-    .player-section.active {
-      display: grid; grid-template-columns: 1fr 380px; gap: 24px; margin-bottom: 32px;
-    }
-    .player-main { min-width: 0; }
-    .player-wrapper {
-      width: 100%; aspect-ratio: 16/9; background: #000;
-      border-radius: var(--radius); overflow: hidden;
-      box-shadow: 0 8px 32px var(--shadow); position: relative;
-    }
-    .player-wrapper iframe {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;
-    }
-    .player-info { margin-top: 16px; }
-    .player-title { font-size: 20px; font-weight: 700; line-height: 1.3; margin-bottom: 10px; }
-    .player-meta {
-      display: flex; align-items: center; gap: 16px; color: var(--text-secondary);
-      font-size: 13px; flex-wrap: wrap; margin-bottom: 12px;
-    }
-    .player-meta .channel { color: var(--text-primary); font-weight: 600; font-size: 15px; }
+    /* COMMENTS */
+    .cmt-sec { margin-top:24px; }
+    .cmt-title { font-size:17px; font-weight:700; margin-bottom:16px; }
+    .cmt { display:flex; gap:12px; margin-bottom:12px; padding:12px; background:var(--card); border-radius:var(--r); }
+    .cmt-av { width:36px; height:36px; border-radius:50%; background:var(--hover); flex-shrink:0; overflow:hidden; }
+    .cmt-av img { width:100%; height:100%; object-fit:cover; }
+    .cmt-b { flex:1; }
+    .cmt-a { font-weight:600; font-size:13px; margin-bottom:4px; }
+    .cmt-time { font-size:11px; color:var(--dim); margin-left:8px; font-weight:400; }
+    .cmt-t { font-size:14px; line-height:1.5; color:var(--dim); }
+    .cmt-l { font-size:12px; color:var(--dim); margin-top:6px; }
 
-    .player-actions { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-    .action-btn {
-      padding: 8px 16px; background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: 20px; color: var(--text-primary); font-size: 13px; cursor: pointer;
-      display: flex; align-items: center; gap: 6px;
-    }
-    .action-btn:hover { background: var(--bg-hover); }
+    /* STATES */
+    .ld { display:none; text-align:center; padding:60px 20px; }
+    .ld.on { display:block; }
+    .sp { width:48px; height:48px; border:4px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 16px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .ld-t { color:var(--dim); font-size:15px; }
+    .empty { text-align:center; padding:80px 20px; display:none; }
+    .empty .ei { font-size:64px; margin-bottom:16px; }
+    .empty .et { font-size:24px; font-weight:700; margin-bottom:8px; }
+    .empty .ed { color:var(--dim); font-size:15px; }
+    .err { display:none; text-align:center; padding:40px; color:var(--accent); }
+    .err.on { display:block; }
+    .retry-btn { margin-top:16px; padding:10px 24px; background:var(--accent); border:none; border-radius:8px; color:#fff; font-size:14px; cursor:pointer; }
+    .retry-btn:hover { background:#ff6666; }
 
-    .player-description {
-      padding: 16px; background: var(--bg-card); border-radius: var(--radius);
-      font-size: 14px; line-height: 1.6; color: var(--text-secondary);
-      white-space: pre-wrap; max-height: 180px; overflow-y: auto; cursor: pointer;
-    }
-    .player-description.expanded { max-height: none; }
+    /* STATUS */
+    .status { position:fixed; bottom:0; left:0; right:0; background:var(--bg2); border-top:1px solid var(--border); padding:6px 24px; font-size:12px; color:var(--dim); display:flex; justify-content:space-between; z-index:50; }
+    .sdot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; }
+    .sdot.ok { background:#4caf50; }
+    .sdot.no { background:var(--accent); }
 
-    .back-btn {
-      display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;
-      margin-bottom: 16px; background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: 8px; color: var(--text-primary); font-size: 14px; cursor: pointer;
-    }
-    .back-btn:hover { background: var(--bg-hover); }
-
-    /* === SIDEBAR === */
-    .player-sidebar { max-height: calc(100vh - 100px); overflow-y: auto; }
-    .sidebar-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
-    .sidebar-video {
-      display: flex; gap: 10px; padding: 8px; border-radius: 8px;
-      cursor: pointer; margin-bottom: 8px;
-    }
-    .sidebar-video:hover { background: var(--bg-hover); }
-    .sidebar-thumb {
-      flex-shrink: 0; width: 168px; aspect-ratio: 16/9;
-      border-radius: 8px; overflow: hidden; background: #111;
-    }
-    .sidebar-thumb img { width: 100%; height: 100%; object-fit: cover; }
-    .sidebar-info { flex: 1; min-width: 0; }
-    .sidebar-info .title {
-      font-size: 13px; font-weight: 600; line-height: 1.3;
-      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-      margin-bottom: 4px;
-    }
-    .sidebar-info .meta { font-size: 12px; color: var(--text-secondary); }
-
-    /* === GRID === */
-    .section-title { font-size: 22px; font-weight: 700; margin-bottom: 20px; }
-    .video-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;
-    }
-    .video-card {
-      background: var(--bg-secondary); border-radius: var(--radius); overflow: hidden;
-      cursor: pointer; border: 1px solid transparent; transition: all var(--transition);
-    }
-    .video-card:hover {
-      transform: translateY(-4px); border-color: var(--border);
-      box-shadow: 0 8px 24px var(--shadow);
-    }
-    .thumb-container { position: relative; aspect-ratio: 16/9; overflow: hidden; background: #111; }
-    .thumb-container img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
-    .video-card:hover .thumb-container img { transform: scale(1.05); }
-    .duration-badge {
-      position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.85);
-      color: #fff; font-size: 12px; font-weight: 600; padding: 2px 6px; border-radius: 4px;
-    }
-    .card-info { padding: 12px; }
-    .card-title {
-      font-size: 14px; font-weight: 600; line-height: 1.4;
-      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-      overflow: hidden; margin-bottom: 6px;
-    }
-    .card-channel { font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; }
-    .card-stats { font-size: 12px; color: var(--text-secondary); display: flex; gap: 8px; }
-
-    /* === COMMENTS === */
-    .comments-section { margin-top: 24px; }
-    .comments-title { font-size: 17px; font-weight: 700; margin-bottom: 16px; }
-    .comment { display: flex; gap: 12px; margin-bottom: 12px; padding: 12px; background: var(--bg-card); border-radius: var(--radius); }
-    .comment-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-hover); flex-shrink: 0; overflow: hidden; }
-    .comment-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .comment-body { flex: 1; }
-    .comment-author { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
-    .comment-time { font-size: 11px; color: var(--text-secondary); margin-left: 8px; font-weight: 400; }
-    .comment-text { font-size: 14px; line-height: 1.5; color: var(--text-secondary); }
-    .comment-likes { font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
-
-    /* === STATES === */
-    .loading { display: none; text-align: center; padding: 60px 20px; }
-    .loading.active { display: block; }
-    .spinner {
-      width: 48px; height: 48px; border: 4px solid var(--border);
-      border-top-color: var(--accent); border-radius: 50%;
-      animation: spin 0.8s linear infinite; margin: 0 auto 16px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-text { color: var(--text-secondary); font-size: 15px; }
-
-    .empty-state { text-align: center; padding: 80px 20px; display: none; }
-    .empty-icon { font-size: 64px; margin-bottom: 16px; }
-    .empty-title { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
-    .empty-desc { color: var(--text-secondary); font-size: 15px; }
-
-    .error-msg { display: none; text-align: center; padding: 40px; color: var(--accent); }
-    .error-msg.active { display: block; }
-
-    /* === STATUS BAR === */
-    .status-bar {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      background: var(--bg-secondary); border-top: 1px solid var(--border);
-      padding: 6px 24px; font-size: 12px; color: var(--text-secondary);
-      display: flex; justify-content: space-between; z-index: 50;
-    }
-    .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
-    .status-dot.online { background: #4caf50; }
-    .status-dot.offline { background: var(--accent); }
-
-    /* === RESPONSIVE === */
-    @media (max-width: 1024px) {
-      .player-section.active { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 768px) {
-      header { padding: 10px 14px; gap: 12px; }
-      .logo-text { display: none; }
-      main { padding: 16px; }
-      .video-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
-      .sidebar-thumb { width: 140px; }
-    }
-    @media (max-width: 480px) { .video-grid { grid-template-columns: 1fr; } }
+    @media(max-width:1024px) { .player.on { grid-template-columns:1fr; } }
+    @media(max-width:768px) { header{padding:10px 14px;gap:12px;} .logo-text{display:none;} main{padding:16px;} .grid{grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;} .side-thumb{width:140px;} }
+    @media(max-width:480px) { .grid{grid-template-columns:1fr;} }
   </style>
 </head>
 <body>
 
-  <header>
-    <div class="logo" onclick="goHome()">
-      <div class="logo-icon">▶</div>
-      <div class="logo-text">YouTube <span>Paralelo</span></div>
+<header>
+  <div class="logo" onclick="goHome()">
+    <div class="logo-icon">▶</div>
+    <div class="logo-text">YouTube <span>Paralelo</span></div>
+  </div>
+  <div class="search-box">
+    <div class="search-row">
+      <input type="text" class="search-input" id="si" placeholder="Pesquisar vídeos..." autocomplete="off" />
+      <button class="search-btn" onclick="doSearch()">🔍</button>
     </div>
-    <div class="search-container">
-      <div class="search-row">
-        <input type="text" class="search-input" id="searchInput" placeholder="Pesquisar vídeos..." autocomplete="off" />
-        <button class="search-btn" onclick="doSearch()">🔍</button>
-      </div>
-      <div class="suggestions" id="suggestions"></div>
-    </div>
-  </header>
+    <div class="sugg" id="sugg"></div>
+  </div>
+</header>
 
-  <nav class="nav-pills">
-    <button class="pill active" onclick="loadTrending(this)">🔥 Tendências</button>
-    <button class="pill" onclick="quickSearch('Música brasileira', this)">🎵 Música</button>
-    <button class="pill" onclick="quickSearch('Gaming gameplay', this)">🎮 Gaming</button>
-    <button class="pill" onclick="quickSearch('Notícias hoje', this)">📰 Notícias</button>
-    <button class="pill" onclick="quickSearch('Esportes futebol', this)">⚽ Esportes</button>
-    <button class="pill" onclick="quickSearch('Tecnologia review', this)">💻 Tecnologia</button>
-    <button class="pill" onclick="quickSearch('Comédia humor', this)">😂 Comédia</button>
-    <button class="pill" onclick="quickSearch('Educação aulas', this)">📚 Educação</button>
-    <button class="pill" onclick="quickSearch('Receitas culinária', this)">🍳 Culinária</button>
-    <button class="pill" onclick="quickSearch('Treino fitness', this)">💪 Fitness</button>
-    <button class="pill" onclick="quickSearch('Filmes trailers', this)">🎬 Filmes</button>
-    <button class="pill" onclick="quickSearch('Ciência documentário', this)">🔬 Ciência</button>
-  </nav>
+<nav class="pills">
+  <button class="pill on" onclick="loadTrending(this)">🔥 Tendências</button>
+  <button class="pill" onclick="qSearch('Música brasileira',this)">🎵 Música</button>
+  <button class="pill" onclick="qSearch('Gaming gameplay',this)">🎮 Gaming</button>
+  <button class="pill" onclick="qSearch('Notícias hoje',this)">📰 Notícias</button>
+  <button class="pill" onclick="qSearch('Esportes futebol',this)">⚽ Esportes</button>
+  <button class="pill" onclick="qSearch('Tecnologia review',this)">💻 Tecnologia</button>
+  <button class="pill" onclick="qSearch('Comédia humor',this)">😂 Comédia</button>
+  <button class="pill" onclick="qSearch('Educação aulas',this)">📚 Educação</button>
+  <button class="pill" onclick="qSearch('Receitas culinária',this)">🍳 Culinária</button>
+  <button class="pill" onclick="qSearch('Treino fitness',this)">💪 Fitness</button>
+  <button class="pill" onclick="qSearch('Filmes trailers',this)">🎬 Filmes</button>
+  <button class="pill" onclick="qSearch('Ciência documentário',this)">🔬 Ciência</button>
+</nav>
 
-  <main>
-    <!-- PLAYER -->
-    <section class="player-section" id="playerSection">
-      <div class="player-main">
-        <button class="back-btn" onclick="closePlayer()">← Voltar</button>
-        <div class="player-wrapper">
-          <iframe id="videoPlayer" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<main>
+  <!-- PLAYER -->
+  <section class="player" id="player">
+    <div class="pl-main">
+      <button class="back-btn" onclick="closePlayer()">← Voltar</button>
+      <div class="pl-wrap"><iframe id="iframe" src="" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe></div>
+      <div class="pl-info">
+        <h1 class="pl-title" id="pTitle"></h1>
+        <div class="pl-meta"><span class="ch" id="pCh"></span><span id="pViews"></span><span id="pDate"></span></div>
+        <div class="pl-actions">
+          <button class="act-btn" onclick="toggleDesc()">📄 Descrição</button>
+          <button class="act-btn" onclick="loadComments()">💬 Comentários</button>
+          <button class="act-btn" onclick="copyLink()">🔗 Copiar Link</button>
         </div>
-        <div class="player-info">
-          <h1 class="player-title" id="playerTitle"></h1>
-          <div class="player-meta">
-            <span class="channel" id="playerChannel"></span>
-            <span id="playerViews"></span>
-            <span id="playerDate"></span>
-          </div>
-          <div class="player-actions">
-            <button class="action-btn" onclick="toggleDesc()">📄 Descrição</button>
-            <button class="action-btn" onclick="loadComments()">💬 Comentários</button>
-            <button class="action-btn" onclick="copyLink()">🔗 Copiar Link</button>
-          </div>
-        </div>
-        <div class="player-description" id="playerDesc" style="display:none;" onclick="this.classList.toggle('expanded')"></div>
-        <div class="comments-section" id="commentsSection" style="display:none;"></div>
       </div>
-      <div class="player-sidebar">
-        <div class="sidebar-title">Vídeos Relacionados</div>
-        <div id="relatedVideos"></div>
-      </div>
-    </section>
-
-    <div class="loading" id="loadingState"><div class="spinner"></div><p class="loading-text">Buscando vídeos...</p></div>
-    <div class="error-msg" id="errorState">
-      <p style="font-size:48px;margin-bottom:12px;">⚠️</p>
-      <p style="font-size:18px;font-weight:600;" id="errorTitle">Erro ao buscar vídeos</p>
-      <p style="color:var(--text-secondary);margin-top:8px;" id="errorText"></p>
-      <button onclick="retryLast()" style="margin-top:16px;padding:10px 24px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:14px;cursor:pointer;">🔄 Tentar novamente</button>
+      <div class="pl-desc" id="pDesc" style="display:none" onclick="this.classList.toggle('exp')"></div>
+      <div class="cmt-sec" id="cmtSec" style="display:none"></div>
     </div>
+    <div class="pl-side"><div class="side-title">Vídeos Relacionados</div><div id="relVids"></div></div>
+  </section>
 
-    <section id="resultsSection">
-      <div class="section-title" id="sectionTitle">🔥 Tendências</div>
-      <div class="video-grid" id="videoGrid"></div>
-    </section>
-
-    <div class="empty-state" id="emptyState">
-      <div class="empty-icon">🎬</div>
-      <div class="empty-title">Nenhum vídeo encontrado</div>
-      <div class="empty-desc">Tente buscar por outro termo ou escolha uma categoria acima.</div>
-    </div>
-  </main>
-
-  <div class="status-bar">
-    <span><span class="status-dot online" id="statusDot"></span><span id="statusText">Conectado — InnerTube API</span></span>
-    <span id="instanceInfo">YouTube Paralelo v2.0</span>
+  <div class="ld" id="ld"><div class="sp"></div><p class="ld-t">Buscando vídeos...</p></div>
+  <div class="err" id="err">
+    <p style="font-size:48px;margin-bottom:12px">⚠️</p>
+    <p style="font-size:18px;font-weight:600" id="errTitle">Erro ao buscar vídeos</p>
+    <p style="color:var(--dim);margin-top:8px" id="errText"></p>
+    <button class="retry-btn" onclick="retry()">🔄 Tentar novamente</button>
   </div>
 
-  <script>
-    const API = window.location.origin;
-    let searchResults = [];
-    let currentVideoId = '';
-    let lastAction = null;
-    let suggestTimer = null;
+  <section id="results">
+    <div class="sec-title" id="secTitle">🔥 Tendências</div>
+    <div class="grid" id="grid"></div>
+  </section>
 
-    const $ = id => document.getElementById(id);
+  <div class="empty" id="empty">
+    <div class="ei">🎬</div><div class="et">Nenhum vídeo encontrado</div>
+    <div class="ed">Tente buscar por outro termo ou escolha uma categoria.</div>
+  </div>
+</main>
 
-    // === INIT ===
-    $('searchInput').addEventListener('keydown', e => {
-      if (e.key === 'Enter') { doSearch(); hideSuggestions(); }
-      if (e.key === 'Escape') hideSuggestions();
-    });
+<div class="status">
+  <span><span class="sdot ok" id="sDot"></span><span id="sTxt">Conectado</span></span>
+  <span id="sInfo">YouTube Paralelo v3.0</span>
+</div>
 
-    $('searchInput').addEventListener('input', () => {
-      clearTimeout(suggestTimer);
-      const q = $('searchInput').value.trim();
-      if (q.length < 2) { hideSuggestions(); return; }
-      suggestTimer = setTimeout(() => fetchSuggestions(q), 300);
-    });
+<script>
+// ===== CONFIG =====
+const INNERTUBE_URL = 'https://www.youtube.com/youtubei/v1';
+const INNERTUBE_KEY = 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8';
+const CTX = { client:{ clientName:'WEB', clientVersion:'2.20240101.00.00', hl:'pt', gl:'BR', platform:'DESKTOP' } };
 
-    document.addEventListener('click', e => {
-      if (!e.target.closest('.search-container')) hideSuggestions();
-    });
+// CORS proxies (fallback chain)
+const PROXIES = [
+  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+  url => `https://corsproxy.org/?${encodeURIComponent(url)}`,
+  url => url, // direct (may work in some cases)
+];
+let proxyIdx = 0;
 
-    window.addEventListener('load', () => loadTrending());
+let results = [], curId = '', lastAct = null, sugTimer = null;
+const $ = id => document.getElementById(id);
 
-    // === SUGGESTIONS ===
-    async function fetchSuggestions(q) {
-      try {
-        const resp = await fetch(`${API}/api/suggestions?q=${encodeURIComponent(q)}`);
-        const data = await resp.json();
-        if (data.length > 0) {
-          $('suggestions').innerHTML = data.slice(0, 8).map(s =>
-            `<div class="suggestion-item" onclick="useSuggestion('${esc(s)}')">🔍 ${esc(s)}</div>`
-          ).join('');
-          $('suggestions').classList.add('active');
-        } else hideSuggestions();
-      } catch(e) { hideSuggestions(); }
-    }
+// ===== INIT =====
+$('si').addEventListener('keydown', e => { if(e.key==='Enter'){doSearch();hideSugg();} if(e.key==='Escape')hideSugg(); });
+$('si').addEventListener('input', () => {
+  clearTimeout(sugTimer);
+  const q=$('si').value.trim();
+  if(q.length<2){hideSugg();return;}
+  sugTimer=setTimeout(()=>fetchSugg(q),300);
+});
+document.addEventListener('click', e => { if(!e.target.closest('.search-box'))hideSugg(); });
+window.addEventListener('load', () => loadTrending());
 
-    function useSuggestion(text) {
-      $('searchInput').value = text;
-      hideSuggestions();
-      doSearch();
-    }
-    function hideSuggestions() { $('suggestions').classList.remove('active'); }
+// ===== INNERTUBE FETCH (with CORS proxy fallback) =====
+async function ytApi(endpoint, body) {
+  const url = `${INNERTUBE_URL}/${endpoint}?key=${INNERTUBE_KEY}&prettyPrint=false`;
+  const payload = JSON.stringify({ context: CTX, ...body });
 
-    // === SEARCH ===
-    function doSearch() {
-      const q = $('searchInput').value.trim();
-      if (!q) return;
-      $('sectionTitle').textContent = '🔎 Resultados para: ' + q;
-      lastAction = () => doSearch();
-      fetchSearch(q);
-    }
+  // Try from the last working proxy
+  for (let i = 0; i < PROXIES.length; i++) {
+    const pi = (proxyIdx + i) % PROXIES.length;
+    const proxyUrl = PROXIES[pi](url);
 
-    function quickSearch(term, el) {
-      setActivePill(el);
-      $('searchInput').value = '';
-      $('sectionTitle').textContent = '🔥 ' + term.split(' ')[0];
-      lastAction = () => quickSearch(term, el);
-      fetchSearch(term);
-    }
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 12000);
 
-    function loadTrending(el) {
-      if (el) setActivePill(el);
-      $('sectionTitle').textContent = '🔥 Tendências';
-      lastAction = () => loadTrending(el);
-      fetchTrending();
-    }
-
-    function retryLast() { if (lastAction) lastAction(); }
-
-    function setActivePill(el) {
-      document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
-      if (el) el.classList.add('active');
-    }
-
-    // === FETCH ===
-    async function fetchSearch(query) {
-      showLoading(true); hideError(); hideEmpty(); closePlayer();
-      try {
-        const resp = await fetch(`${API}/api/search?q=${encodeURIComponent(query)}`);
-        const data = await resp.json();
-        if (data.error) throw new Error(data.error);
-        updateStatus(true, data.source);
-        searchResults = data.videos || [];
-        renderVideos(searchResults);
-      } catch (err) {
-        updateStatus(false);
-        showError(err.message);
-      } finally { showLoading(false); }
-    }
-
-    async function fetchTrending() {
-      showLoading(true); hideError(); hideEmpty(); closePlayer();
-      try {
-        const resp = await fetch(`${API}/api/trending`);
-        const data = await resp.json();
-        if (data.error) throw new Error(data.error);
-        updateStatus(true, data.source);
-        searchResults = data.videos || [];
-        renderVideos(searchResults);
-      } catch (err) {
-        updateStatus(false);
-        fetchSearch('popular brasil ' + new Date().getFullYear());
-        return;
-      } finally { showLoading(false); }
-    }
-
-    // === RENDER GRID ===
-    function renderVideos(videos) {
-      if (!videos.length) { hideResults(); showEmpty(); return; }
-      showResults();
-      $('videoGrid').innerHTML = videos.map((v, i) => {
-        const thumb = getThumb(v);
-        const dur = v.durationText || formatDuration(v.lengthSeconds);
-        const views = v.viewCountText || formatViews(v.viewCount);
-        return `
-          <div class="video-card" onclick="openVideo('${v.videoId}', ${i})">
-            <div class="thumb-container">
-              <img src="${thumb}" alt="" loading="lazy"
-                   onerror="this.src='${API}/api/proxy/thumb/${v.videoId}'" />
-              ${dur ? `<span class="duration-badge">${dur}</span>` : ''}
-            </div>
-            <div class="card-info">
-              <div class="card-title">${esc(v.title)}</div>
-              <div class="card-channel">${esc(v.author)}</div>
-              <div class="card-stats">
-                <span>${views}</span>
-                ${v.publishedText ? `<span>• ${esc(v.publishedText)}</span>` : ''}
-              </div>
-            </div>
-          </div>`;
-      }).join('');
-    }
-
-    // === OPEN VIDEO ===
-    async function openVideo(videoId, index) {
-      currentVideoId = videoId;
-      const v = searchResults[index] || {};
-
-      $('videoPlayer').src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`;
-      $('playerTitle').textContent = v.title || 'Carregando...';
-      $('playerChannel').textContent = v.author || '';
-      $('playerViews').textContent = v.viewCountText || formatViews(v.viewCount);
-      $('playerDate').textContent = v.publishedText || '';
-      $('playerDesc').textContent = v.description || '';
-      $('playerDesc').style.display = 'none';
-      $('commentsSection').style.display = 'none';
-      $('relatedVideos').innerHTML = '<p style="color:var(--text-secondary)">Carregando...</p>';
-
-      $('playerSection').classList.add('active');
-      $('resultsSection').style.display = 'none';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-
-      // Fetch details + related
-      try {
-        const resp = await fetch(`${API}/api/streams/${videoId}`);
-        const data = await resp.json();
-        if (data.title) $('playerTitle').textContent = data.title;
-        if (data.uploader) $('playerChannel').textContent = data.uploader;
-        if (data.views) $('playerViews').textContent = formatViews(data.views) + ' visualizações';
-        if (data.uploadDate) $('playerDate').textContent = data.uploadDate;
-        if (data.description) $('playerDesc').textContent = data.description;
-        renderRelated(data.relatedStreams || []);
-      } catch (e) {
-        $('relatedVideos').innerHTML = '<p style="color:var(--text-secondary)">Não foi possível carregar relacionados.</p>';
-      }
-    }
-
-    function renderRelated(videos) {
-      if (!videos.length) {
-        $('relatedVideos').innerHTML = '<p style="color:var(--text-secondary)">Sem vídeos relacionados</p>';
-        return;
-      }
-      $('relatedVideos').innerHTML = videos.map(v => {
-        const id = v.videoId || '';
-        const thumb = getThumb(v) || `${API}/api/proxy/thumb/${id}`;
-        return `
-          <div class="sidebar-video" onclick="openRelated('${id}', ${searchResults.length})">
-            <div class="sidebar-thumb">
-              <img src="${thumb}" alt="" loading="lazy" onerror="this.src='${API}/api/proxy/thumb/${id}'" />
-            </div>
-            <div class="sidebar-info">
-              <div class="title">${esc(v.title)}</div>
-              <div class="meta">${esc(v.author || '')} · ${v.viewCountText || formatViews(v.viewCount || 0)}</div>
-            </div>
-          </div>`;
-      }).join('');
-
-      // Add related to searchResults so openRelated works
-      videos.forEach(v => {
-        if (!searchResults.find(s => s.videoId === v.videoId)) {
-          searchResults.push(v);
-        }
+      const resp = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+        signal: ctrl.signal,
       });
+      clearTimeout(timer);
+
+      const text = await resp.text();
+      if (text.trim().startsWith('<') || !resp.ok) throw new Error('Not JSON');
+
+      const data = JSON.parse(text);
+      proxyIdx = pi; // remember working proxy
+      return data;
+    } catch(e) {
+      console.warn(`Proxy ${pi} failed:`, e.message);
+      continue;
     }
+  }
 
-    function openRelated(id, idx) {
-      const realIdx = searchResults.findIndex(s => s.videoId === id);
-      openVideo(id, realIdx >= 0 ? realIdx : idx);
+  // All proxies failed — try GET method with some proxies
+  for (let i = 0; i < 2; i++) {
+    try {
+      const getUrl = `${INNERTUBE_URL}/${endpoint}?key=${INNERTUBE_KEY}`;
+      const pUrl = PROXIES[i](getUrl);
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 10000);
+      const resp = await fetch(pUrl, {
+        method: 'POST',
+        body: payload,
+        headers: { 'Content-Type': 'application/json' },
+        signal: ctrl.signal,
+      });
+      clearTimeout(timer);
+      const text = await resp.text();
+      if (text.trim().startsWith('<')) throw new Error('HTML');
+      return JSON.parse(text);
+    } catch(e) { continue; }
+  }
+
+  throw new Error('Todos os proxies falharam. Tente novamente em alguns segundos.');
+}
+
+// ===== PARSER =====
+function extractVids(data) {
+  const vids = [];
+  function walk(o) {
+    if (!o || typeof o !== 'object') return;
+    if (o.videoRenderer) { vids.push(parseVR(o.videoRenderer)); return; }
+    if (o.richItemRenderer?.content?.videoRenderer) { vids.push(parseVR(o.richItemRenderer.content.videoRenderer)); return; }
+    if (o.compactVideoRenderer) { vids.push(parseCVR(o.compactVideoRenderer)); return; }
+    if (Array.isArray(o)) o.forEach(walk); else Object.values(o).forEach(walk);
+  }
+  walk(data);
+  return vids;
+}
+
+function parseVR(v) {
+  const id = v.videoId||'';
+  const title = v.title?.runs?.map(r=>r.text).join('')||v.title?.simpleText||'';
+  const ch = v.ownerText?.runs?.map(r=>r.text).join('')||v.longBylineText?.runs?.map(r=>r.text).join('')||v.shortBylineText?.runs?.map(r=>r.text).join('')||'';
+  const viewsRaw = v.viewCountText?.simpleText||v.viewCountText?.runs?.map(r=>r.text).join('')||'';
+  const pub = v.publishedTimeText?.simpleText||v.publishedTimeText?.runs?.map(r=>r.text).join('')||'';
+  const durTxt = v.lengthText?.simpleText||'';
+  const desc = v.detailedMetadataSnippets?.[0]?.snippetText?.runs?.map(r=>r.text).join('')||v.descriptionSnippet?.runs?.map(r=>r.text).join('')||'';
+  const thumb = v.thumbnail?.thumbnails?.slice(-1)[0]?.url||`https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
+  return { videoId:id, title, author:ch, viewCountText:viewsRaw, viewCount:parseViewCount(viewsRaw), publishedText:pub, durationText:durTxt, lengthSeconds:parseDur(durTxt), description:desc, thumb };
+}
+
+function parseCVR(v) {
+  const id=v.videoId||'';
+  const title=v.title?.simpleText||v.title?.runs?.map(r=>r.text).join('')||'';
+  const ch=v.longBylineText?.runs?.map(r=>r.text).join('')||v.shortBylineText?.runs?.map(r=>r.text).join('')||'';
+  const vt=v.viewCountText?.simpleText||'';
+  const pub=v.publishedTimeText?.simpleText||'';
+  const durTxt=v.lengthText?.simpleText||'';
+  const thumb=v.thumbnail?.thumbnails?.slice(-1)[0]?.url||`https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
+  return { videoId:id, title, author:ch, viewCountText:vt, viewCount:parseViewCount(vt), publishedText:pub, durationText:durTxt, lengthSeconds:parseDur(durTxt), description:'', thumb };
+}
+
+function parseViewCount(s) { return parseInt((s.match(/[\d.,]+/)||['0'])[0].replace(/[.,]/g,''))||0; }
+function parseDur(s) { if(!s)return 0; const p=s.split(':').map(Number); if(p.length===3)return p[0]*3600+p[1]*60+p[2]; if(p.length===2)return p[0]*60+p[1]; return p[0]||0; }
+
+// ===== SUGGESTIONS =====
+async function fetchSugg(q) {
+  try {
+    // Try direct first (YouTube suggestions usually allow CORS)
+    let resp, text;
+    try {
+      resp = await fetch(`https://suggestqueries-clients6.youtube.com/complete/search?client=youtube&q=${encodeURIComponent(q)}&ds=yt&hl=pt`);
+      text = await resp.text();
+    } catch(e) {
+      // Try with proxy
+      const pUrl = PROXIES[proxyIdx](`https://suggestqueries-clients6.youtube.com/complete/search?client=youtube&q=${encodeURIComponent(q)}&ds=yt&hl=pt`);
+      resp = await fetch(pUrl);
+      text = await resp.text();
     }
-
-    // === COMMENTS ===
-    async function loadComments() {
-      if (!currentVideoId) return;
-      const sec = $('commentsSection');
-      sec.style.display = 'block';
-      sec.innerHTML = '<p style="color:var(--text-secondary);padding:12px;">Carregando comentários...</p>';
-
-      try {
-        const resp = await fetch(`${API}/api/comments/${currentVideoId}`);
-        const data = await resp.json();
-        const comments = data.comments || [];
-
-        if (!comments.length) {
-          sec.innerHTML = '<p style="color:var(--text-secondary);padding:12px;">Sem comentários disponíveis.</p>';
-          return;
-        }
-
-        sec.innerHTML = `
-          <div class="comments-title">💬 ${comments.length} Comentários</div>
-          ${comments.slice(0, 25).map(c => `
-            <div class="comment">
-              <div class="comment-avatar">${c.authorThumb ? `<img src="${c.authorThumb}" alt="" />` : '👤'}</div>
-              <div class="comment-body">
-                <div class="comment-author">${esc(c.author)} <span class="comment-time">${esc(c.publishedTime)}</span></div>
-                <div class="comment-text">${esc(c.content)}</div>
-                <div class="comment-likes">👍 ${c.likeCount || 0}</div>
-              </div>
-            </div>
-          `).join('')}`;
-      } catch (e) {
-        sec.innerHTML = '<p style="color:var(--text-secondary);padding:12px;">Erro ao carregar comentários.</p>';
+    if(text.trim().startsWith('<'))return hideSugg();
+    const match = text.match(/\[.*\]/s);
+    if(match) {
+      const data=JSON.parse(match[0]);
+      const items=(data[1]||[]).map(s=>s[0]).slice(0,8);
+      if(items.length>0) {
+        $('sugg').innerHTML=items.map(s=>`<div class="sugg-item" onclick="useSugg('${esc(s)}')">🔍 ${esc(s)}</div>`).join('');
+        $('sugg').classList.add('on');
+        return;
       }
     }
+    hideSugg();
+  } catch(e) { hideSugg(); }
+}
+function useSugg(t) { $('si').value=t; hideSugg(); doSearch(); }
+function hideSugg() { $('sugg').classList.remove('on'); }
 
-    // === ACTIONS ===
-    function toggleDesc() {
-      const d = $('playerDesc');
-      d.style.display = d.style.display === 'none' ? 'block' : 'none';
+// ===== SEARCH =====
+function doSearch() {
+  const q=$('si').value.trim();
+  if(!q)return;
+  $('secTitle').textContent='🔎 Resultados: '+q;
+  lastAct=()=>doSearch();
+  fetchSearch(q);
+}
+function qSearch(term,el) { setPill(el); $('si').value=''; $('secTitle').textContent='🔥 '+term.split(' ')[0]; lastAct=()=>qSearch(term,el); fetchSearch(term); }
+function loadTrending(el) { if(el)setPill(el); $('secTitle').textContent='🔥 Tendências'; lastAct=()=>loadTrending(el); fetchTrending(); }
+function retry() { if(lastAct)lastAct(); }
+function setPill(el) { document.querySelectorAll('.pill').forEach(p=>p.classList.remove('on')); if(el)el.classList.add('on'); }
+
+async function fetchSearch(q) {
+  loading(true); hideErr(); hideEmpty(); closePlayer();
+  try {
+    const data = await ytApi('search', { query: q });
+    const vids = extractVids(data);
+    stat(true); results=vids; renderGrid(vids);
+  } catch(e) { stat(false); showErr(e.message); }
+  finally { loading(false); }
+}
+
+async function fetchTrending() {
+  loading(true); hideErr(); hideEmpty(); closePlayer();
+  try {
+    const data = await ytApi('browse', { browseId:'FEtrending' });
+    const vids = extractVids(data);
+    if(vids.length>0) { stat(true); results=vids; renderGrid(vids); }
+    else throw new Error('empty');
+  } catch(e) {
+    // Fallback: search popular
+    try {
+      const data = await ytApi('search', { query:'popular brasil '+new Date().getFullYear() });
+      const vids = extractVids(data);
+      stat(true); results=vids; renderGrid(vids);
+    } catch(e2) { stat(false); showErr(e2.message); }
+  }
+  finally { loading(false); }
+}
+
+// ===== RENDER GRID =====
+function renderGrid(vids) {
+  if(!vids.length){hideRes();showEmpty();return;}
+  showRes();
+  $('grid').innerHTML=vids.map((v,i)=>{
+    const img=v.thumb||`https://i.ytimg.com/vi/${v.videoId}/mqdefault.jpg`;
+    return `<div class="vcard" onclick="openVid('${v.videoId}',${i})">
+      <div class="tc">
+        <img src="${img}" alt="" loading="lazy" onerror="this.src='https://i.ytimg.com/vi/${v.videoId}/mqdefault.jpg'" />
+        ${v.durationText?`<span class="dur">${v.durationText}</span>`:''}
+      </div>
+      <div class="ci">
+        <div class="ct">${esc(v.title)}</div>
+        <div class="cc">${esc(v.author)}</div>
+        <div class="cs"><span>${v.viewCountText||fmtViews(v.viewCount)}</span>${v.publishedText?`<span>• ${esc(v.publishedText)}</span>`:''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== OPEN VIDEO =====
+async function openVid(id,idx) {
+  curId=id;
+  const v=results[idx]||{};
+  $('iframe').src=`https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`;
+  $('pTitle').textContent=v.title||'Carregando...';
+  $('pCh').textContent=v.author||'';
+  $('pViews').textContent=v.viewCountText||fmtViews(v.viewCount);
+  $('pDate').textContent=v.publishedText||'';
+  $('pDesc').textContent=v.description||''; $('pDesc').style.display='none';
+  $('cmtSec').style.display='none';
+  $('relVids').innerHTML='<p style="color:var(--dim)">Carregando relacionados...</p>';
+  $('player').classList.add('on'); $('results').style.display='none';
+  window.scrollTo({top:0,behavior:'smooth'});
+
+  try {
+    const [playerData, nextData] = await Promise.all([
+      ytApi('player',{ videoId:id, playbackContext:{ contentPlaybackContext:{signatureTimestamp:20000} } }),
+      ytApi('next',{ videoId:id }),
+    ]);
+    const d=playerData.videoDetails||{};
+    if(d.title)$('pTitle').textContent=d.title;
+    if(d.author)$('pCh').textContent=d.author;
+    if(d.viewCount)$('pViews').textContent=fmtViews(parseInt(d.viewCount))+' visualizações';
+    if(d.shortDescription)$('pDesc').textContent=d.shortDescription;
+    const rel=extractVids(nextData);
+    renderRel(rel.slice(0,15));
+  } catch(e) {
+    $('relVids').innerHTML='<p style="color:var(--dim)">Não foi possível carregar relacionados.</p>';
+  }
+}
+
+function renderRel(vids) {
+  if(!vids.length){$('relVids').innerHTML='<p style="color:var(--dim)">Sem relacionados</p>';return;}
+  $('relVids').innerHTML=vids.map(v=>{
+    const img=v.thumb||`https://i.ytimg.com/vi/${v.videoId}/mqdefault.jpg`;
+    return `<div class="side-vid" onclick="openRel('${v.videoId}')">
+      <div class="side-thumb"><img src="${img}" alt="" loading="lazy" onerror="this.src='https://i.ytimg.com/vi/${v.videoId}/mqdefault.jpg'" /></div>
+      <div class="side-info"><div class="t">${esc(v.title)}</div><div class="m">${esc(v.author)} · ${v.viewCountText||fmtViews(v.viewCount)}</div></div>
+    </div>`;
+  }).join('');
+  vids.forEach(v=>{if(!results.find(r=>r.videoId===v.videoId))results.push(v);});
+}
+
+function openRel(id) { const i=results.findIndex(r=>r.videoId===id); openVid(id,i>=0?i:results.length-1); }
+
+// ===== COMMENTS =====
+async function loadComments() {
+  if(!curId)return;
+  $('cmtSec').style.display='block';
+  $('cmtSec').innerHTML='<p style="color:var(--dim);padding:12px">Carregando comentários...</p>';
+  try {
+    const nextData=await ytApi('next',{videoId:curId});
+    let token=null;
+    try {
+      const items=nextData?.contents?.twoColumnWatchNextResults?.results?.results?.contents||[];
+      for(const item of items) {
+        const sr=item.itemSectionRenderer;
+        if(sr?.contents?.[0]?.continuationItemRenderer) {
+          token=sr.contents[0].continuationItemRenderer.continuationEndpoint?.continuationCommand?.token;
+          break;
+        }
+      }
+    } catch(e){}
+    if(!token){$('cmtSec').innerHTML='<p style="color:var(--dim);padding:12px">Comentários indisponíveis.</p>';return;}
+
+    const cmtData=await ytApi('next',{continuation:token});
+    const comments=[];
+    function exCmt(o){
+      if(!o||typeof o!=='object')return;
+      if(o.commentThreadRenderer){
+        const c=o.commentThreadRenderer.comment?.commentRenderer;
+        if(c)comments.push({
+          author:c.authorText?.simpleText||'',
+          text:c.contentText?.runs?.map(r=>r.text).join('')||'',
+          likes:c.voteCount?.simpleText||'0',
+          time:c.publishedTimeText?.runs?.map(r=>r.text).join('')||'',
+          avatar:c.authorThumbnail?.thumbnails?.[0]?.url||'',
+        });
+        return;
+      }
+      if(Array.isArray(o))o.forEach(exCmt); else Object.values(o).forEach(exCmt);
     }
+    exCmt(cmtData);
 
-    function copyLink() {
-      const url = `https://youtu.be/${currentVideoId}`;
-      navigator.clipboard.writeText(url).then(() => alert('Link copiado! ' + url)).catch(() => prompt('Copie:', url));
-    }
+    if(!comments.length){$('cmtSec').innerHTML='<p style="color:var(--dim);padding:12px">Sem comentários.</p>';return;}
+    $('cmtSec').innerHTML=`<div class="cmt-title">💬 ${comments.length} Comentários</div>`+
+      comments.slice(0,25).map(c=>`<div class="cmt">
+        <div class="cmt-av">${c.avatar?`<img src="${c.avatar}" alt=""/>`:' 👤'}</div>
+        <div class="cmt-b">
+          <div class="cmt-a">${esc(c.author)}<span class="cmt-time">${esc(c.time)}</span></div>
+          <div class="cmt-t">${esc(c.text)}</div>
+          <div class="cmt-l">👍 ${c.likes}</div>
+        </div>
+      </div>`).join('');
+  } catch(e) { $('cmtSec').innerHTML='<p style="color:var(--dim);padding:12px">Erro ao carregar comentários.</p>'; }
+}
 
-    function closePlayer() {
-      $('playerSection').classList.remove('active');
-      $('videoPlayer').src = '';
-      currentVideoId = '';
-      $('commentsSection').style.display = 'none';
-      showResults();
-    }
+// ===== ACTIONS =====
+function toggleDesc(){const d=$('pDesc');d.style.display=d.style.display==='none'?'block':'none';}
+function copyLink(){const u=`https://youtu.be/${curId}`;navigator.clipboard.writeText(u).then(()=>alert('Link copiado! '+u)).catch(()=>prompt('Copie:',u));}
+function closePlayer(){$('player').classList.remove('on');$('iframe').src='';curId='';$('cmtSec').style.display='none';showRes();}
+function goHome(){closePlayer();$('si').value='';setPill(document.querySelector('.pill'));loadTrending();}
 
-    function goHome() {
-      closePlayer();
-      $('searchInput').value = '';
-      setActivePill(document.querySelector('.pill'));
-      loadTrending();
-    }
+// ===== UTILS =====
+function fmtViews(n){if(!n)return'0';if(n>=1e9)return(n/1e9).toFixed(1).replace('.0','')+'B';if(n>=1e6)return(n/1e6).toFixed(1).replace('.0','')+'M';if(n>=1e3)return(n/1e3).toFixed(1).replace('.0','')+'K';return n.toLocaleString('pt-BR');}
+function esc(s){const m={'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};return String(s||'').replace(/[&<>"']/g,c=>m[c]);}
+function stat(ok){$('sDot').className='sdot '+(ok?'ok':'no');$('sTxt').textContent=ok?'Conectado — InnerTube API':'Erro de conexão';}
+function loading(on){$('ld').classList.toggle('on',on);if(on)hideRes();}
+function showErr(m){$('errText').textContent=m;$('err').classList.add('on');hideRes();}
+function hideErr(){$('err').classList.remove('on');}
+function showEmpty(){$('empty').style.display='block';}
+function hideEmpty(){$('empty').style.display='none';}
+function showRes(){$('results').style.display='block';}
+function hideRes(){$('results').style.display='none';}
+</script>
 
-    // === UTILS ===
-    function getThumb(v) {
-      if (v.videoThumbnails?.length) return v.videoThumbnails[0].url;
-      if (v.thumbnail) return v.thumbnail;
-      if (v.videoId) return `https://i.ytimg.com/vi/${v.videoId}/mqdefault.jpg`;
-      return '';
-    }
-
-    function formatDuration(s) {
-      if (!s || s <= 0) return '';
-      const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
-      return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${m}:${pad(sec)}`;
-    }
-    function pad(n) { return String(n).padStart(2, '0'); }
-
-    function formatViews(n) {
-      if (!n) return '0 views';
-      if (n >= 1e9) return (n/1e9).toFixed(1).replace('.0','') + 'B views';
-      if (n >= 1e6) return (n/1e6).toFixed(1).replace('.0','') + 'M views';
-      if (n >= 1e3) return (n/1e3).toFixed(1).replace('.0','') + 'K views';
-      return n.toLocaleString('pt-BR') + ' views';
-    }
-
-    function esc(s) {
-      const m = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
-      return String(s||'').replace(/[&<>"']/g, c => m[c]);
-    }
-
-    function updateStatus(ok, src) {
-      $('statusDot').className = 'status-dot ' + (ok ? 'online' : 'offline');
-      $('statusText').textContent = ok ? 'Conectado — InnerTube API' : 'Erro de conexão';
-      if (src) $('instanceInfo').textContent = `Fonte: ${src}`;
-    }
-
-    function showLoading(on) { $('loadingState').classList.toggle('active', on); if(on) hideResults(); }
-    function showError(msg) { $('errorText').textContent = msg; $('errorState').classList.add('active'); hideResults(); }
-    function hideError() { $('errorState').classList.remove('active'); }
-    function showEmpty() { $('emptyState').style.display = 'block'; }
-    function hideEmpty() { $('emptyState').style.display = 'none'; }
-    function showResults() { $('resultsSection').style.display = 'block'; }
-    function hideResults() { $('resultsSection').style.display = 'none'; }
-  </script>
 </body>
 </html>
