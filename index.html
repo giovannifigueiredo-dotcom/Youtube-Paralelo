@@ -18,6 +18,7 @@
       --text-secondary: #aaaaaa;
       --accent: #ff4444;
       --accent-hover: #ff6666;
+      --accent-dim: rgba(255,68,68,0.15);
       --border: #333333;
       --shadow: rgba(0,0,0,0.4);
       --radius: 12px;
@@ -34,7 +35,6 @@
 
     a { color: inherit; text-decoration: none; }
 
-    /* ===== SCROLLBAR ===== */
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-track { background: var(--bg-primary); }
     ::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
@@ -45,13 +45,13 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      background: var(--bg-secondary);
+      background: rgba(26,26,26,0.95);
       border-bottom: 1px solid var(--border);
       padding: 12px 24px;
       display: flex;
       align-items: center;
       gap: 20px;
-      backdrop-filter: blur(12px);
+      backdrop-filter: blur(16px);
     }
 
     .logo {
@@ -63,14 +63,15 @@
     }
 
     .logo-icon {
-      width: 36px;
-      height: 36px;
-      background: var(--accent);
-      border-radius: 8px;
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent), #cc0000);
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
+      font-size: 20px;
+      box-shadow: 0 2px 12px rgba(255,68,68,0.3);
     }
 
     .logo-text {
@@ -86,6 +87,10 @@
       flex: 1;
       max-width: 640px;
       margin: 0 auto;
+      position: relative;
+    }
+
+    .search-row {
       display: flex;
       gap: 0;
     }
@@ -104,7 +109,6 @@
     }
 
     .search-input:focus { border-color: #555; }
-
     .search-input::placeholder { color: #666; }
 
     .search-btn {
@@ -121,6 +125,36 @@
     }
 
     .search-btn:hover { background: var(--bg-hover); }
+
+    /* ===== SUGGESTIONS ===== */
+    .suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 0 0 var(--radius) var(--radius);
+      display: none;
+      z-index: 200;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .suggestions.active { display: block; }
+
+    .suggestion-item {
+      padding: 10px 18px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background 0.15s;
+    }
+
+    .suggestion-item:hover { background: var(--bg-hover); }
+    .suggestion-item .icon { color: var(--text-secondary); }
 
     /* ===== NAV PILLS ===== */
     .nav-pills {
@@ -159,19 +193,20 @@
       padding: 24px;
     }
 
-    /* ===== VIDEO PLAYER SECTION ===== */
-    .player-section {
-      display: none;
+    /* ===== PLAYER SECTION ===== */
+    .player-section { display: none; }
+    .player-section.active {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 24px;
       margin-bottom: 32px;
     }
 
-    .player-section.active { display: block; }
+    .player-main { min-width: 0; }
 
     .player-wrapper {
       position: relative;
       width: 100%;
-      max-width: 900px;
-      margin: 0 auto;
       aspect-ratio: 16/9;
       background: #000;
       border-radius: var(--radius);
@@ -179,23 +214,21 @@
       box-shadow: 0 8px 32px var(--shadow);
     }
 
-    .player-wrapper iframe {
+    .player-wrapper iframe,
+    .player-wrapper video {
       position: absolute;
       top: 0; left: 0;
       width: 100%; height: 100%;
       border: none;
     }
 
-    .player-info {
-      max-width: 900px;
-      margin: 16px auto 0;
-    }
+    .player-info { margin-top: 16px; }
 
     .player-title {
       font-size: 20px;
       font-weight: 700;
       line-height: 1.3;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
 
     .player-meta {
@@ -205,11 +238,115 @@
       color: var(--text-secondary);
       font-size: 13px;
       flex-wrap: wrap;
+      margin-bottom: 12px;
     }
 
     .player-meta .channel {
       color: var(--text-primary);
       font-weight: 600;
+      font-size: 15px;
+    }
+
+    .player-actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .action-btn {
+      padding: 8px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      color: var(--text-primary);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .action-btn:hover { background: var(--bg-hover); }
+    .action-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+    .player-description {
+      padding: 16px;
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      white-space: pre-wrap;
+      max-height: 200px;
+      overflow-y: auto;
+      cursor: pointer;
+    }
+
+    .player-description.expanded { max-height: none; }
+
+    /* ===== SIDEBAR ===== */
+    .player-sidebar {
+      max-height: calc(100vh - 100px);
+      overflow-y: auto;
+    }
+
+    .sidebar-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .sidebar-video {
+      display: flex;
+      gap: 10px;
+      padding: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background var(--transition);
+      margin-bottom: 8px;
+    }
+
+    .sidebar-video:hover { background: var(--bg-hover); }
+
+    .sidebar-thumb {
+      flex-shrink: 0;
+      width: 168px;
+      aspect-ratio: 16/9;
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+      background: #111;
+    }
+
+    .sidebar-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .sidebar-info { flex: 1; min-width: 0; }
+
+    .sidebar-info .title {
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-info .channel {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .sidebar-info .stats {
+      font-size: 11px;
+      color: var(--text-secondary);
     }
 
     .back-btn {
@@ -228,20 +365,6 @@
     }
 
     .back-btn:hover { background: var(--bg-hover); }
-
-    .player-description {
-      max-width: 900px;
-      margin: 16px auto 0;
-      padding: 16px;
-      background: var(--bg-card);
-      border-radius: var(--radius);
-      font-size: 14px;
-      line-height: 1.6;
-      color: var(--text-secondary);
-      white-space: pre-wrap;
-      max-height: 200px;
-      overflow-y: auto;
-    }
 
     /* ===== VIDEO GRID ===== */
     .section-title {
@@ -288,9 +411,7 @@
       transition: transform 0.3s ease;
     }
 
-    .video-card:hover .thumb-container img {
-      transform: scale(1.05);
-    }
+    .video-card:hover .thumb-container img { transform: scale(1.05); }
 
     .duration-badge {
       position: absolute;
@@ -304,9 +425,7 @@
       border-radius: 4px;
     }
 
-    .card-info {
-      padding: 12px;
-    }
+    .card-info { padding: 12px; }
 
     .card-title {
       font-size: 14px;
@@ -332,13 +451,45 @@
       gap: 8px;
     }
 
-    /* ===== LOADING ===== */
-    .loading {
-      display: none;
-      text-align: center;
-      padding: 60px 20px;
+    /* ===== COMMENTS ===== */
+    .comments-section {
+      margin-top: 24px;
     }
 
+    .comments-title {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .comment {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: var(--bg-card);
+      border-radius: var(--radius);
+    }
+
+    .comment-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--bg-hover);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .comment-body { flex: 1; }
+    .comment-author { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+    .comment-text { font-size: 14px; line-height: 1.5; color: var(--text-secondary); }
+    .comment-likes { font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
+
+    /* ===== LOADING ===== */
+    .loading { display: none; text-align: center; padding: 60px 20px; }
     .loading.active { display: block; }
 
     .spinner {
@@ -352,65 +503,51 @@
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: var(--text-secondary); font-size: 15px; }
 
-    .loading-text {
-      color: var(--text-secondary);
-      font-size: 15px;
-    }
+    /* ===== EMPTY & ERROR ===== */
+    .empty-state { text-align: center; padding: 80px 20px; display: none; }
+    .empty-icon { font-size: 64px; margin-bottom: 16px; }
+    .empty-title { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+    .empty-desc { color: var(--text-secondary); font-size: 15px; max-width: 400px; margin: 0 auto; }
 
-    /* ===== EMPTY STATE ===== */
-    .empty-state {
-      text-align: center;
-      padding: 80px 20px;
-    }
-
-    .empty-icon {
-      font-size: 64px;
-      margin-bottom: 16px;
-    }
-
-    .empty-title {
-      font-size: 24px;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-
-    .empty-desc {
-      color: var(--text-secondary);
-      font-size: 15px;
-      max-width: 400px;
-      margin: 0 auto;
-    }
-
-    /* ===== ERROR ===== */
-    .error-msg {
-      display: none;
-      text-align: center;
-      padding: 40px;
-      color: var(--accent);
-    }
-
+    .error-msg { display: none; text-align: center; padding: 40px; color: var(--accent); }
     .error-msg.active { display: block; }
 
-    /* ===== TRENDING SECTION ===== */
-    .trending-header {
+    .status-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      padding: 6px 24px;
+      font-size: 12px;
+      color: var(--text-secondary);
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      margin-bottom: 20px;
+      z-index: 50;
     }
 
-    /* ===== FOOTER ===== */
-    footer {
-      text-align: center;
-      padding: 32px;
-      color: #555;
-      font-size: 13px;
-      border-top: 1px solid var(--border);
-      margin-top: 48px;
+    .status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
     }
+
+    .status-dot.online { background: #4caf50; }
+    .status-dot.offline { background: var(--accent); }
 
     /* ===== RESPONSIVE ===== */
+    @media (max-width: 1024px) {
+      .player-section.active {
+        grid-template-columns: 1fr;
+      }
+      .player-sidebar { max-height: none; }
+    }
+
     @media (max-width: 768px) {
       header { padding: 10px 14px; gap: 12px; }
       .logo-text { display: none; }
@@ -420,6 +557,7 @@
       main { padding: 16px; }
       .video-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
       .player-title { font-size: 17px; }
+      .sidebar-thumb { width: 140px; }
     }
 
     @media (max-width: 480px) {
@@ -436,20 +574,17 @@
       <div class="logo-text">YouTube <span>Paralelo</span></div>
     </div>
     <div class="search-container">
-      <input
-        type="text"
-        class="search-input"
-        id="searchInput"
-        placeholder="Pesquisar vídeos..."
-        autocomplete="off"
-      />
-      <button class="search-btn" onclick="doSearch()">🔍</button>
+      <div class="search-row">
+        <input type="text" class="search-input" id="searchInput" placeholder="Pesquisar vídeos..." autocomplete="off" />
+        <button class="search-btn" onclick="doSearch()">🔍</button>
+      </div>
+      <div class="suggestions" id="suggestions"></div>
     </div>
   </header>
 
   <!-- NAV PILLS -->
   <nav class="nav-pills" id="navPills">
-    <button class="pill active" onclick="quickSearch('Tendências', this)">🔥 Tendências</button>
+    <button class="pill active" onclick="loadTrending(this)">🔥 Tendências</button>
     <button class="pill" onclick="quickSearch('Música', this)">🎵 Música</button>
     <button class="pill" onclick="quickSearch('Gaming', this)">🎮 Gaming</button>
     <button class="pill" onclick="quickSearch('Notícias', this)">📰 Notícias</button>
@@ -468,48 +603,54 @@
 
     <!-- PLAYER SECTION -->
     <section class="player-section" id="playerSection">
-      <button class="back-btn" onclick="closePlayer()">← Voltar aos resultados</button>
-      <div class="player-wrapper">
-        <iframe
-          id="videoPlayer"
-          src=""
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowfullscreen
-        ></iframe>
-      </div>
-      <div class="player-info">
-        <h1 class="player-title" id="playerTitle"></h1>
-        <div class="player-meta">
-          <span class="channel" id="playerChannel"></span>
-          <span id="playerViews"></span>
-          <span id="playerDate"></span>
+      <div class="player-main">
+        <button class="back-btn" onclick="closePlayer()">← Voltar</button>
+        <div class="player-wrapper" id="playerWrapper">
+          <iframe id="videoPlayer" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         </div>
+        <div class="player-info">
+          <h1 class="player-title" id="playerTitle"></h1>
+          <div class="player-meta">
+            <span class="channel" id="playerChannel"></span>
+            <span id="playerViews"></span>
+            <span id="playerDate"></span>
+          </div>
+          <div class="player-actions">
+            <button class="action-btn" onclick="toggleDesc()">📄 Descrição</button>
+            <button class="action-btn" onclick="loadComments()">💬 Comentários</button>
+            <button class="action-btn" onclick="copyLink()">🔗 Copiar Link</button>
+          </div>
+        </div>
+        <div class="player-description" id="playerDesc" style="display:none;" onclick="this.classList.toggle('expanded')"></div>
+        <div class="comments-section" id="commentsSection" style="display:none;"></div>
       </div>
-      <div class="player-description" id="playerDesc"></div>
+      <div class="player-sidebar" id="playerSidebar">
+        <div class="sidebar-title">Vídeos Relacionados</div>
+        <div id="relatedVideos"></div>
+      </div>
     </section>
 
-    <!-- LOADING STATE -->
+    <!-- LOADING -->
     <div class="loading" id="loadingState">
       <div class="spinner"></div>
       <p class="loading-text">Buscando vídeos...</p>
     </div>
 
-    <!-- ERROR STATE -->
+    <!-- ERROR -->
     <div class="error-msg" id="errorState">
       <p style="font-size:48px;margin-bottom:12px;">⚠️</p>
       <p style="font-size:18px;font-weight:600;">Erro ao buscar vídeos</p>
       <p style="color:var(--text-secondary);margin-top:8px;" id="errorText"></p>
-      <p style="color:var(--text-secondary);margin-top:12px;font-size:13px;">Tentando outro servidor...</p>
     </div>
 
-    <!-- RESULTS SECTION -->
+    <!-- RESULTS -->
     <section id="resultsSection">
       <div class="section-title" id="sectionTitle">🔥 Tendências</div>
       <div class="video-grid" id="videoGrid"></div>
     </section>
 
-    <!-- EMPTY STATE -->
-    <div class="empty-state" id="emptyState" style="display:none;">
+    <!-- EMPTY -->
+    <div class="empty-state" id="emptyState">
       <div class="empty-icon">🎬</div>
       <div class="empty-title">Nenhum vídeo encontrado</div>
       <div class="empty-desc">Tente buscar por outro termo ou escolha uma categoria acima.</div>
@@ -517,31 +658,22 @@
 
   </main>
 
-  <footer>
-    YouTube Paralelo — Frontend alternativo • Apenas para fins educacionais
-  </footer>
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <span><span class="status-dot online" id="statusDot"></span> <span id="statusText">Servidor conectado</span></span>
+    <span id="instanceInfo"></span>
+  </div>
 
   <script>
-    // ===== INVIDIOUS INSTANCES (fallback list) =====
-    const INSTANCES = [
-      'https://vid.puffyan.us',
-      'https://invidious.snopyta.org',
-      'https://yewtu.be',
-      'https://inv.riverside.rocks',
-      'https://invidious.kavin.rocks',
-      'https://inv.bp.projectsegfau.lt',
-      'https://invidious.protokolla.fi',
-      'https://invidious.privacydev.net',
-      'https://invidious.lunar.icu',
-      'https://iv.ggtyler.dev',
-    ];
-
-    let currentInstance = 0;
-    let currentQuery = '';
+    // ===== STATE =====
+    const API = window.location.origin;
     let searchResults = [];
+    let currentVideoId = '';
+    let suggestTimer = null;
 
-    // ===== DOM ELEMENTS =====
+    // ===== DOM =====
     const searchInput    = document.getElementById('searchInput');
+    const suggestionsEl  = document.getElementById('suggestions');
     const videoGrid      = document.getElementById('videoGrid');
     const loadingState   = document.getElementById('loadingState');
     const errorState     = document.getElementById('errorState');
@@ -556,103 +688,131 @@
     const playerViews    = document.getElementById('playerViews');
     const playerDate     = document.getElementById('playerDate');
     const playerDesc     = document.getElementById('playerDesc');
+    const relatedVideos  = document.getElementById('relatedVideos');
+    const commentsSection = document.getElementById('commentsSection');
+    const statusDot      = document.getElementById('statusDot');
+    const statusText     = document.getElementById('statusText');
+    const instanceInfo   = document.getElementById('instanceInfo');
 
     // ===== INIT =====
-    searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
-    window.addEventListener('load', () => fetchVideos('Tendências Brasil'));
+    searchInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { doSearch(); hideSuggestions(); }
+      if (e.key === 'Escape') hideSuggestions();
+    });
+
+    searchInput.addEventListener('input', () => {
+      clearTimeout(suggestTimer);
+      const q = searchInput.value.trim();
+      if (q.length < 2) { hideSuggestions(); return; }
+      suggestTimer = setTimeout(() => fetchSuggestions(q), 300);
+    });
+
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.search-container')) hideSuggestions();
+    });
+
+    window.addEventListener('load', () => loadTrending());
+
+    // ===== SUGGESTIONS =====
+    async function fetchSuggestions(q) {
+      try {
+        const resp = await fetch(`${API}/api/suggestions?q=${encodeURIComponent(q)}`);
+        const data = await resp.json();
+        if (data.length > 0) {
+          suggestionsEl.innerHTML = data.slice(0, 8).map(s =>
+            `<div class="suggestion-item" onclick="useSuggestion('${escapeHtml(s)}')">
+              <span class="icon">🔍</span> ${escapeHtml(s)}
+            </div>`
+          ).join('');
+          suggestionsEl.classList.add('active');
+        } else {
+          hideSuggestions();
+        }
+      } catch(e) {
+        hideSuggestions();
+      }
+    }
+
+    function useSuggestion(text) {
+      searchInput.value = text;
+      hideSuggestions();
+      doSearch();
+    }
+
+    function hideSuggestions() { suggestionsEl.classList.remove('active'); }
 
     // ===== SEARCH =====
     function doSearch() {
       const q = searchInput.value.trim();
       if (!q) return;
       sectionTitle.textContent = '🔎 Resultados para: ' + q;
-      fetchVideos(q);
+      fetchSearch(q);
     }
 
     function quickSearch(term, el) {
-      document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
-      if (el) el.classList.add('active');
+      setActivePill(el);
       searchInput.value = '';
       sectionTitle.textContent = '🔥 ' + term;
-      fetchVideos(term);
+      fetchSearch(term);
     }
 
-    // ===== FETCH FROM INVIDIOUS =====
-    async function fetchVideos(query, instanceIdx = 0) {
-      currentQuery = query;
+    function loadTrending(el) {
+      if (el) setActivePill(el);
+      sectionTitle.textContent = '🔥 Tendências';
+      fetchTrending();
+    }
+
+    function setActivePill(el) {
+      document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+      if (el) el.classList.add('active');
+    }
+
+    // ===== FETCH SEARCH =====
+    async function fetchSearch(query) {
       showLoading(true);
-      hideError();
-      hideEmpty();
-      closePlayer();
+      hideError(); hideEmpty(); closePlayer();
 
-      // Try each instance in order
-      for (let i = instanceIdx; i < INSTANCES.length; i++) {
-        const base = INSTANCES[i];
-        const url = `${base}/api/v1/search?q=${encodeURIComponent(query)}&type=video&page=1&region=BR`;
-
-        try {
-          const resp = await fetchWithTimeout(url, 8000);
-          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-          const data = await resp.json();
-
-          if (data && data.length > 0) {
-            currentInstance = i;
-            searchResults = data.filter(v => v.type === 'video');
-            renderVideos(searchResults);
-            showLoading(false);
-            return;
-          }
-        } catch (err) {
-          console.warn(`Instance ${base} failed:`, err.message);
-          continue;
-        }
-      }
-
-      // All instances failed — try piped API as ultimate fallback
       try {
-        const pipedUrl = `https://pipedapi.kavin.rocks/search?q=${encodeURIComponent(query)}&filter=videos`;
-        const resp = await fetchWithTimeout(pipedUrl, 8000);
-        if (resp.ok) {
-          const data = await resp.json();
-          if (data.items && data.items.length > 0) {
-            searchResults = data.items.map(normalizePiped);
-            renderVideos(searchResults);
-            showLoading(false);
-            return;
-          }
-        }
-      } catch(e) {
-        console.warn('Piped also failed:', e.message);
+        const resp = await fetch(`${API}/api/search?q=${encodeURIComponent(query)}`);
+        const data = await resp.json();
+
+        if (data.error) throw new Error(data.error);
+
+        updateStatus(true, data.source);
+        searchResults = data.videos || [];
+        renderVideos(searchResults);
+      } catch (err) {
+        updateStatus(false);
+        showError(err.message);
+      } finally {
+        showLoading(false);
       }
-
-      showLoading(false);
-      showError('Todos os servidores estão indisponíveis. Tente novamente em alguns minutos.');
     }
 
-    function fetchWithTimeout(url, ms) {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), ms);
-      return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(timer));
+    // ===== FETCH TRENDING =====
+    async function fetchTrending() {
+      showLoading(true);
+      hideError(); hideEmpty(); closePlayer();
+
+      try {
+        const resp = await fetch(`${API}/api/trending?region=BR`);
+        const data = await resp.json();
+
+        if (data.error) throw new Error(data.error);
+
+        updateStatus(true, data.source);
+        searchResults = data.videos || [];
+        renderVideos(searchResults);
+      } catch (err) {
+        // Fallback to search
+        fetchSearch('Tendências Brasil');
+        return;
+      } finally {
+        showLoading(false);
+      }
     }
 
-    // Normalize Piped API format to Invidious-like
-    function normalizePiped(item) {
-      const id = (item.url || '').replace('/watch?v=', '');
-      return {
-        type: 'video',
-        videoId: id,
-        title: item.title || 'Sem título',
-        author: item.uploaderName || item.uploader || 'Desconhecido',
-        authorUrl: item.uploaderUrl || '',
-        viewCount: item.views || 0,
-        publishedText: item.uploadedDate || '',
-        lengthSeconds: item.duration || 0,
-        videoThumbnails: [{ quality: 'medium', url: item.thumbnail || '' }],
-        description: item.shortDescription || '',
-      };
-    }
-
-    // ===== RENDER =====
+    // ===== RENDER GRID =====
     function renderVideos(videos) {
       if (!videos.length) { hideResults(); showEmpty(); return; }
       showResults();
@@ -661,10 +821,10 @@
         const duration = formatDuration(v.lengthSeconds);
         const views = formatViews(v.viewCount);
         return `
-          <div class="video-card" onclick="playVideo(${i})">
+          <div class="video-card" onclick="openVideo('${v.videoId}', ${i})">
             <div class="thumb-container">
               <img src="${thumb}" alt="${escapeHtml(v.title)}" loading="lazy"
-                   onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22320%22 height=%22180%22><rect fill=%22%23222%22 width=%22320%22 height=%22180%22/><text x=%2250%25%22 y=%2250%25%22 fill=%22%23555%22 font-size=%2220%22 text-anchor=%22middle%22 dy=%22.3em%22>▶</text></svg>'" />
+                   onerror="this.src='${API}/api/proxy/thumb/${v.videoId}'" />
               ${duration ? `<span class="duration-badge">${duration}</span>` : ''}
             </div>
             <div class="card-info">
@@ -675,51 +835,169 @@
                 ${v.publishedText ? `<span>• ${v.publishedText}</span>` : ''}
               </div>
             </div>
-          </div>
-        `;
+          </div>`;
       }).join('');
     }
 
-    function getBestThumb(v) {
-      if (v.videoThumbnails && v.videoThumbnails.length) {
-        const med = v.videoThumbnails.find(t => t.quality === 'medium' || t.quality === 'sddefault');
-        return (med || v.videoThumbnails[0]).url;
-      }
-      return `https://i.ytimg.com/vi/${v.videoId}/mqdefault.jpg`;
-    }
+    // ===== OPEN VIDEO =====
+    async function openVideo(videoId, index) {
+      currentVideoId = videoId;
+      const v = searchResults[index] || {};
 
-    // ===== PLAY VIDEO =====
-    function playVideo(index) {
-      const v = searchResults[index];
-      if (!v) return;
-
-      // Use YouTube embed (most reliable for playback)
-      videoPlayer.src = `https://www.youtube-nocookie.com/embed/${v.videoId}?autoplay=1&rel=0`;
-      playerTitle.textContent = v.title;
-      playerChannel.textContent = v.author;
+      // Set player with YouTube embed
+      videoPlayer.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`;
+      playerTitle.textContent = v.title || 'Carregando...';
+      playerChannel.textContent = v.author || '';
       playerViews.textContent = formatViews(v.viewCount) + ' visualizações';
       playerDate.textContent = v.publishedText || '';
-      playerDesc.textContent = v.description || 'Sem descrição disponível.';
+      playerDesc.textContent = v.description || '';
+      playerDesc.style.display = 'none';
+      commentsSection.style.display = 'none';
 
       playerSection.classList.add('active');
-      playerSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      resultsSection.style.display = 'none';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Fetch full details + related
+      try {
+        const resp = await fetch(`${API}/api/streams/${videoId}`);
+        const data = await resp.json();
+
+        if (data.title) playerTitle.textContent = data.title;
+        if (data.uploader) playerChannel.textContent = data.uploader;
+        if (data.views) playerViews.textContent = formatViews(data.views) + ' visualizações';
+        if (data.uploadDate) playerDate.textContent = data.uploadDate;
+        if (data.description) playerDesc.textContent = data.description;
+
+        instanceInfo.textContent = `Fonte: ${data.source || 'unknown'}`;
+
+        // Render related videos
+        const related = data.relatedStreams || data.recommendedVideos || [];
+        renderRelated(related);
+      } catch (e) {
+        console.warn('Could not fetch streams:', e);
+        relatedVideos.innerHTML = '<p style="color:var(--text-secondary);padding:12px;">Não foi possível carregar vídeos relacionados.</p>';
+      }
+    }
+
+    // ===== RENDER RELATED =====
+    function renderRelated(videos) {
+      if (!videos.length) {
+        relatedVideos.innerHTML = '<p style="color:var(--text-secondary);">Sem vídeos relacionados</p>';
+        return;
+      }
+      relatedVideos.innerHTML = videos.map(v => {
+        const id = v.videoId || (v.url || '').replace('/watch?v=', '');
+        const thumb = getBestThumb(v) || `${API}/api/proxy/thumb/${id}`;
+        const title = v.title || 'Sem título';
+        const channel = v.author || v.uploaderName || '';
+        const views = formatViews(v.viewCount || v.views || 0);
+        return `
+          <div class="sidebar-video" onclick="openRelated('${id}', '${escapeAttr(title)}', '${escapeAttr(channel)}')">
+            <div class="sidebar-thumb">
+              <img src="${thumb}" alt="${escapeHtml(title)}" loading="lazy"
+                   onerror="this.src='${API}/api/proxy/thumb/${id}'" />
+            </div>
+            <div class="sidebar-info">
+              <div class="title">${escapeHtml(title)}</div>
+              <div class="channel">${escapeHtml(channel)}</div>
+              <div class="stats">${views} visualizações</div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function openRelated(id, title, channel) {
+      // Add to searchResults so openVideo can reference it
+      searchResults.push({
+        videoId: id,
+        title: title,
+        author: channel,
+        viewCount: 0,
+        publishedText: '',
+        lengthSeconds: 0,
+        description: '',
+        videoThumbnails: [],
+      });
+      openVideo(id, searchResults.length - 1);
+    }
+
+    // ===== COMMENTS =====
+    async function loadComments() {
+      if (!currentVideoId) return;
+      commentsSection.style.display = 'block';
+      commentsSection.innerHTML = '<p style="color:var(--text-secondary);padding:12px;">Carregando comentários...</p>';
+
+      try {
+        const resp = await fetch(`${API}/api/comments/${currentVideoId}`);
+        const data = await resp.json();
+
+        const comments = data.comments || data.data || [];
+        if (!comments.length) {
+          commentsSection.innerHTML = '<p style="color:var(--text-secondary);padding:12px;">Sem comentários disponíveis.</p>';
+          return;
+        }
+
+        commentsSection.innerHTML = `
+          <div class="comments-title">💬 Comentários</div>
+          ${comments.slice(0, 20).map(c => `
+            <div class="comment">
+              <div class="comment-avatar">👤</div>
+              <div class="comment-body">
+                <div class="comment-author">${escapeHtml(c.author || c.commentorUrl || 'Anônimo')}</div>
+                <div class="comment-text">${escapeHtml(c.content || c.commentText || '')}</div>
+                <div class="comment-likes">${c.likeCount || 0} 👍</div>
+              </div>
+            </div>
+          `).join('')}
+        `;
+      } catch (e) {
+        commentsSection.innerHTML = '<p style="color:var(--text-secondary);padding:12px;">Erro ao carregar comentários.</p>';
+      }
+    }
+
+    // ===== ACTIONS =====
+    function toggleDesc() {
+      const d = playerDesc;
+      d.style.display = d.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function copyLink() {
+      const url = `https://youtu.be/${currentVideoId}`;
+      navigator.clipboard.writeText(url).then(() => {
+        alert('Link copiado! ' + url);
+      }).catch(() => {
+        prompt('Copie o link:', url);
+      });
     }
 
     function closePlayer() {
       playerSection.classList.remove('active');
       videoPlayer.src = '';
+      currentVideoId = '';
+      commentsSection.style.display = 'none';
+      showResults();
     }
 
     function goHome() {
       closePlayer();
       searchInput.value = '';
-      document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
-      document.querySelector('.pill').classList.add('active');
+      setActivePill(document.querySelector('.pill'));
       sectionTitle.textContent = '🔥 Tendências';
-      fetchVideos('Tendências Brasil');
+      loadTrending();
     }
 
     // ===== UTILITIES =====
+    function getBestThumb(v) {
+      if (v.videoThumbnails && v.videoThumbnails.length) {
+        const med = v.videoThumbnails.find(t => t.quality === 'medium' || t.quality === 'sddefault');
+        return (med || v.videoThumbnails[0]).url;
+      }
+      if (v.thumbnail) return v.thumbnail;
+      if (v.videoId) return `https://i.ytimg.com/vi/${v.videoId}/mqdefault.jpg`;
+      return '';
+    }
+
     function formatDuration(secs) {
       if (!secs || secs <= 0) return '';
       const h = Math.floor(secs / 3600);
@@ -733,19 +1011,29 @@
 
     function formatViews(n) {
       if (!n) return '0';
-      if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1).replace('.0', '') + 'B';
-      if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace('.0', '') + 'M';
-      if (n >= 1_000) return (n / 1_000).toFixed(1).replace('.0', '') + 'K';
+      if (n >= 1e9) return (n/1e9).toFixed(1).replace('.0','') + 'B';
+      if (n >= 1e6) return (n/1e6).toFixed(1).replace('.0','') + 'M';
+      if (n >= 1e3) return (n/1e3).toFixed(1).replace('.0','') + 'K';
       return n.toLocaleString('pt-BR');
     }
 
     function escapeHtml(str) {
-      const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
-      return String(str || '').replace(/[&<>"']/g, c => map[c]);
+      const map = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
+      return String(str||'').replace(/[&<>"']/g, c => map[c]);
     }
 
-    // ===== UI STATE HELPERS =====
-    function showLoading(on) { loadingState.classList.toggle('active', on); if (on) hideResults(); }
+    function escapeAttr(str) {
+      return String(str||'').replace(/'/g, "\\'").replace(/"/g, '\\"');
+    }
+
+    function updateStatus(online, source) {
+      statusDot.className = 'status-dot ' + (online ? 'online' : 'offline');
+      statusText.textContent = online ? 'Servidor conectado' : 'Servidor offline';
+      if (source) instanceInfo.textContent = `Fonte: ${source}`;
+    }
+
+    // UI State
+    function showLoading(on) { loadingState.classList.toggle('active', on); if(on) hideResults(); }
     function showError(msg) { errorText.textContent = msg; errorState.classList.add('active'); hideResults(); }
     function hideError() { errorState.classList.remove('active'); }
     function showEmpty() { emptyState.style.display = 'block'; }
